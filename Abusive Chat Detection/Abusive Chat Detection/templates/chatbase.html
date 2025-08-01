@@ -1,0 +1,224 @@
+<html>
+  <head>
+		<title>Chat App</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/emojionearea/3.4.2/emojionearea.min.css"/>
+<style>
+.GFG {
+	color: white;
+	text-shadow: -1px 1px 0 #000,
+		1px 1px 0 #000,
+		1px -1px 0 #000,
+		-1px -1px 0 #000;
+}
+   
+body {
+  margin: 0 auto;
+  max-width: 800px;
+  padding: 0 20px;
+  background-image: url('static/chatbg.png');
+  background-size: cover;
+}	
+
+.container {
+  border: 2px solid #dedede;
+  background-color: #f1f1f1;
+  border-radius: 5px;
+  padding: 10px;
+  margin: 10px 10px;
+}
+
+.darker {
+  border-color: #ccc;
+  background-color: #ddd;
+}
+
+.container::after {
+  content: "";
+  clear: both;
+  display: table;
+}
+
+.container img {
+  float: left;
+  max-width: 60px;
+  width: 100%;
+  margin-right: 20px;
+  border-radius: 50%;
+}
+
+.container img.right {
+  float: right;
+  margin-left: 20px;
+  margin-right:0;
+}
+
+.time-right {
+  float: right;
+  color: #aaa;
+}
+
+.time-left {
+  float: left;
+  color: #999;
+}
+
+
+input[type=text]{
+    -webkit-border-radius: 20px;
+    -moz-border-radius: 20px;
+     border-radius: 20px;
+     border: 1px solid #2d9fd9;
+     color: #a0d18c;
+     width: 250px;
+     height: 30px;
+     padding-left: 10px;
+    }
+    
+input[type=text]:focus {
+     outline: none;
+     border: 1px solid #a0d18c;
+     color: #2d9fd9;
+}
+
+
+
+
+
+</style>
+  </head>
+  <body onload="connect()">
+    <div><button><a href="../chat">New Chat</a></button></div>
+		
+			<button><a href="/logout">Logout</a> </button><br> <br>
+    <hr>
+    {% block content %}{% endblock %}
+  </body>
+ <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js" type="text/javascript"></script> 
+ <script>
+ var Person = "";
+ var User = "";
+	function sendmsg()
+	{
+		newmsg = document.getElementById("msg").value;
+		console.log(newmsg);
+		dateTime = new Date().toLocaleString();
+		msg = "<div class=\"container darker\"><img class=\"right\" src=\"https://www.w3schools.com/w3images/bandmember.jpg\" alt=\"Avatar\"  style=\"width\:100%;\"><p>";
+		msg += newmsg;
+		msg += "</p><span class=\"time-left\">" + dateTime + "</span></div>";
+		jsonObj = [];
+		msgData = {};
+		msgData["sender"] = User;
+		msgData["reciver"] = Person;
+		msgData["msg"] = newmsg;
+		jsonObj.push(msgData);
+		console.log(jsonObj);
+		
+		message = new Paho.MQTT.Message(JSON.stringify(jsonObj));
+		message.destinationName = "india/pune/chat/app/server";
+		client.send(message);
+		
+		
+		
+		document.getElementById("chatbox").innerHTML += msg;
+		
+		
+		
+		document.getElementById("msg").value = "";
+		ScrollChatBox();
+	}
+	function StartChat()
+	{
+		Person = document.getElementById("person").value;
+		User = document.querySelector("#user").innerHTML;
+		alert(Person + "_" + User);
+		MyTopic = "india/pune/chat/app/"+User;
+		console.log(MyTopic);
+		client.subscribe(MyTopic);
+		
+		
+		ScrollChatBox();
+	}
+	
+	function connect()
+	{
+	mid = makeid(20);
+	console.log(mid);
+	client = new Paho.MQTT.Client("broker.hivemq.com", 8000, mid);
+
+	// set callback handlers
+	client.onConnectionLost = onConnectionLost;
+	client.onMessageArrived = onMessageArrived;
+
+	// connect the client
+	client.connect({onSuccess:onConnect});
+	}
+
+	// called when the client connects
+	function onConnect() {
+	  // Once a connection has been made, make a subscription and send a message.
+	  console.log("onConnect");
+	  //client.subscribe("World");
+	  //message = new Paho.MQTT.Message("Hello");
+	  //message.destinationName = "World";
+	  //client.send(message);
+	}
+
+	// called when the client loses its connection
+	function onConnectionLost(responseObject) {
+	  if (responseObject.errorCode !== 0) {
+		console.log("onConnectionLost:"+responseObject.errorMessage);
+	  }
+	}
+
+	// called when a message arrives
+	function onMessageArrived(message) {
+		console.log("onMessageArrived:"+message.payloadString);
+		dateTime = new Date().toLocaleString();
+		console.log(dateTime);
+		msg = "<div class=\"container\"><img src=\"https://www.w3schools.com/w3images/bandmember.jpg\" alt=\"Avatar\"  style=\"width\:100%;\"><p>";
+		msg += message.payloadString;
+		msg += "</p><span class=\"time-left\">" + dateTime + "</span></div>";
+		document.getElementById("chatbox").innerHTML += msg;
+		
+		var chatdiv = $("#chatbox");
+		$("#chatbox").animate({ scrollTop: 20000000 }, "slow");
+
+	}
+	
+	function makeid(length) {
+    let result = '';
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const charactersLength = characters.length;
+    let counter = 0;
+    while (counter < length) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+      counter += 1;
+    }
+    return result;
+	}
+	
+	function ScrollChatBox()
+	{
+		var chatdiv = $("#chatbox");
+		$("#chatbox").animate({ scrollTop: 20000000 }, "slow");
+	}
+</script> 
+
+<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/emojionearea/3.4.2/emojionearea.min.js"</script>
+<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+
+<script type="text/javascript">
+
+
+</script>
+<script src="static/src/emojiPicker.js"></script>
+  <script>
+    (() => {
+      new EmojiPicker()
+    })()
+  </script>
+</html>

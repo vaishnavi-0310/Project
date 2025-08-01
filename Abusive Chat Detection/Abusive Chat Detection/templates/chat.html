@@ -1,0 +1,36 @@
+{% extends "chatbase.html" %}
+{% block content %}
+{% if session['logged_in'] %}
+   <div align="center" id="user" class="GFG"style="font-size:50px;color:white;">{{name}}</div><br>
+	{% if data %}
+	<h3>{{data}}</h3>
+	{% else %}
+
+			
+	{% endif %}
+	<label for="fname"><b class="GFG">Chat With (User Name)</b></label>
+	<input type="text" id="person" name="person">
+	<button onclick='StartChat()'>Start Chat</button>
+	</br>
+	<div id="chatbox" style="overflow-y: scroll; height: 70%; background-image: url('static/chat.jpg')">
+
+	</div>	
+	
+	<textarea type="text" placeholder="Enter text..." id="msg" data-emoji-picker="true" style='width: 90%'></textarea>
+
+
+
+	
+	
+	<button id="myBtn" style='width: 9%' onclick="sendmsg();">send</button>
+
+{% else %}
+<p>Not login!</p>
+
+<a href="/login">Login</a> 
+<a href="/register">Register</a>
+
+{% endif %}
+{% endblock %}
+
+
